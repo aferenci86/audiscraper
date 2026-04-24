@@ -5,12 +5,11 @@ import storage
 from filters import matches
 import notifier
 
-from scrapers import bat, pcarmarket, ebay, craigslist, ksl, cargurus, autotrader, cars_com
+from scrapers import bat, pcarmarket, craigslist, ksl, cargurus, autotrader, cars_com
 
 SCRAPERS = [
     ("BaT", bat.scrape),
     ("PCarMarket", pcarmarket.scrape),
-    ("eBay", ebay.scrape),
     ("Craigslist", craigslist.scrape),
     ("KSL", ksl.scrape),
     ("CarGurus", cargurus.scrape),
