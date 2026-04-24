@@ -1,0 +1,47 @@
+name: R8 Scraper
+
+on:
+  schedule:
+    # Twice per week: Monday and Thursday at 15:00 UTC (9am MT during DST, 8am MT otherwise)
+    - cron: '0 15 * * 1,4'
+  workflow_dispatch: {}  # lets you trigger manually from the Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to commit seen.db back
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Restore seen.db cache
+        uses: actions/cache@v4
+        with:
+          path: seen.db
+          key: seen-db-${{ github.run_id }}
+          restore-keys: |
+            seen-db-
+
+      - name: Run scraper
+        env:
+          TWILIO_SID: ${{ secrets.TWILIO_SID }}
+          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
+          TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
+          TWILIO_TO: ${{ secrets.TWILIO_TO }}
+          EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
+        run: python main.py
+
+      - name: Commit updated seen.db
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen.db || true
+          git diff --cached --quiet || git commit -m "Update seen.db [skip ci]"
+          git push || true
